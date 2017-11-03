@@ -1,0 +1,32 @@
+{
+  "name": "templatesapi",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon --exec babel-node  index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hulakantony/templatesAPI.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hulakantony/templatesAPI/issues"
+  },
+  "homepage": "https://github.com/hulakantony/templatesAPI#readme",
+  "dependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.0",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-stage-0": "^6.24.1",
+    "body-parser": "^1.18.2",
+    "cors": "^2.8.4",
+    "express": "^4.16.2",
+    "mongodb": "^2.2.33",
+    "morgan": "^1.9.0",
+    "nodemon": "^1.12.1"
+  }
+}
