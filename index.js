@@ -14,7 +14,6 @@ app.use(bodyParser.json({limit: '50mb'}));
 app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));
 app.use(morgan('dev'));
 
-const SERVER_PORT = 8080;
 const ObjectId = mongodb.ObjectId;
 
 app.get('/templates', async (req, res, next) => {
@@ -77,23 +76,25 @@ app.post('/templates', (req, res, next) => {
 
 app.delete('/templates/:id', async (req,res,next) => {
   const id = req.params.id;
+  let deletedItem;
   try {
-    await db.collection('templates').findOneAndDelete({ '_id' : new ObjectId(id) })
+    deletedItem = await db.collection('templates').findOneAndDelete({ '_id' : new ObjectId(id) })
   } catch (err) {
     next({
       status: 400,
       message: 'Not posible to delete template'
     });
   }
-  res.json('Template successfully deleted');
+  res.json(deletedItem.value);
 });
 
 app.put('/templates/:id', async (req, res, next) => {
   const id = new ObjectId(req.params.id);
+  let updatedItem;
   try {
     let currentDoc = await db.collection('templates').findOne({ '_id': new ObjectId(id) });
-    await db.collection('templates')
-    .update(
+    updatedItem = await db.collection('templates')
+    .findOneAndUpdate(
       { '_id': new ObjectId(id) },
       { $set: { private: !currentDoc.private, createdAt: new Date() } }
     );
@@ -103,10 +104,50 @@ app.put('/templates/:id', async (req, res, next) => {
       message: 'Not posible to update this template'
     });
   }
-  res.json('Template successfully updated');
+  res.json(updatedItem.value);
 });
 
 app.use(errorHandler);
+
+function normalizePort(val) {
+  let port = parseInt(val, 10);
+  if (isNaN(port)) {
+    return val;
+  }
+  if (port >= 0) {
+    return port;
+  }
+  return false;
+}
+function onError(error) {
+  if (error.syscall !== 'listen') {
+    throw error;
+  }
+  var bind = typeof port === 'string'
+    ? 'Pipe ' + port
+    : 'Port ' + port;
+  switch (error.code) {
+    case 'EACCES':
+      console.error(bind + ' requires elevated privileges');
+      process.exit(1);
+      break;
+    case 'EADDRINUSE':
+      console.error(bind + ' is already in use');
+      process.exit(1);
+      break;
+    default:
+      throw error;
+  }
+}
+
+function onListening() {
+  let addr = server.address();
+  let bind = typeof addr === 'string'
+    ? 'pipe ' + addr
+    : 'port ' + addr.port;
+  debug('Listening on ' + bind);
+}
+const port = normalizePort(process.env.PORT || '8080');
 
 MongoClient.connect(config.db, (err, database) => {
   if (err) {
@@ -114,8 +155,8 @@ MongoClient.connect(config.db, (err, database) => {
     process.exit(1);
   }
   db = database;
-  app.listen(SERVER_PORT, (err) => {
-    if (err) console.log(err);
-    console.log(`Server is running on http://localhost:${SERVER_PORT}`);
+  app.listen(port, (err) => {
+    app.on('error', onError);
+    app.on('listening', onListening);
   });
 });
