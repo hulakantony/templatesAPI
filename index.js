@@ -15,6 +15,7 @@ app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));
 app.use(morgan('dev'));
 
 const SERVER_PORT = 8080;
+const ObjectId = mongodb.ObjectId;
 
 app.get('/templates', async (req, res, next) => {
   const isPrivate = req.query.privacy === 'private';
@@ -47,7 +48,7 @@ app.get('/templates', async (req, res, next) => {
     } catch (err) {
       next({
         status: 404,
-        message: 'Sorry, some troubls with your request'
+        message: 'Sorry, some troubles with your request'
       })
     }
   }
@@ -72,6 +73,37 @@ app.post('/templates', (req, res, next) => {
     }
     res.json('saved');
   })
+});
+
+app.delete('/templates/:id', async (req,res,next) => {
+  const id = req.params.id;
+  try {
+    await db.collection('templates').findOneAndDelete({ '_id' : new ObjectId(id) })
+  } catch (err) {
+    next({
+      status: 400,
+      message: 'Not posible to delete template'
+    });
+  }
+  res.json('Template successfully deleted');
+});
+
+app.put('/templates/:id', async (req, res, next) => {
+  const id = new ObjectId(req.params.id);
+  try {
+    let currentDoc = await db.collection('templates').findOne({ '_id': new ObjectId(id) });
+    await db.collection('templates')
+    .update(
+      { '_id': new ObjectId(id) },
+      { $set: { private: !currentDoc.private, createdAt: new Date() } }
+    );
+  } catch (err) {
+    next({
+      status: 400,
+      message: 'Not posible to update this template'
+    });
+  }
+  res.json('Template successfully updated');
 });
 
 app.use(errorHandler);
